@@ -681,11 +681,11 @@ impl Contract {
             return Err(Error::InvalidParameters);
         }
 
-        if raffle.winners.get(tier_index).unwrap() != winner {
+        if raffle.winners.get(tier_index).ok_or(Error::InvalidIndex)? != winner {
             return Err(Error::NotWinner);
         }
 
-        if raffle.claimed_winners.get(tier_index).unwrap() {
+        if raffle.claimed_winners.get(tier_index).ok_or(Error::InvalidIndex)? {
             return Err(Error::PrizeAlreadyClaimed);
         }
 
@@ -931,7 +931,7 @@ fn do_finalize_with_seed(
     let mut winners = Vec::new(env);
 
     for i in 0..winning_ticket_ids.len() {
-        let winner_index = winning_ticket_ids.get(i).unwrap();
+        let winner_index = winning_ticket_ids.get(i).ok_or(Error::InvalidIndex)?;
         let ticket_id = winner_index + 1;
         let winner = get_ticket_owner(env, ticket_id).ok_or(Error::TicketNotFound)?;
         winners.push_back(winner.clone());
