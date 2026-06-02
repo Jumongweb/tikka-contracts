@@ -588,11 +588,15 @@ impl Contract {
         write_raffle(&env, &raffle);
 
         let token_client = token::Client::new(&env, &raffle.payment_token);
-        token_client.transfer(&env.current_contract_address(), &winner, &net_amount);
+        token_client
+            .try_transfer(&env.current_contract_address(), &winner, &net_amount)
+            .map_err(|_| Error::TokenTransferFailed)?;
 
         if fee > 0 {
             if let Some(treasury) = &raffle.treasury_address {
-                token_client.transfer(&env.current_contract_address(), treasury, &fee);
+                token_client
+                    .try_transfer(&env.current_contract_address(), treasury, &fee)
+                    .map_err(|_| Error::TokenTransferFailed)?;
             }
         }
 
@@ -655,7 +659,9 @@ impl Contract {
         write_raffle(&env, &raffle);
 
         let token_client = token::Client::new(&env, &raffle.payment_token);
-        token_client.transfer(&env.current_contract_address(), &raffle.creator, &raffle.prize_amount);
+        token_client
+            .try_transfer(&env.current_contract_address(), &raffle.creator, &raffle.prize_amount)
+            .map_err(|_| Error::TokenTransferFailed)?;
 
         PrizeRefunded {
             creator: raffle.creator.clone(),
@@ -687,7 +693,9 @@ impl Contract {
         env.storage().persistent().set(&refund_key, &true);
 
         let token_client = token::Client::new(&env, &raffle.payment_token);
-        token_client.transfer(&env.current_contract_address(), &ticket.owner, &raffle.ticket_price);
+        token_client
+            .try_transfer(&env.current_contract_address(), &ticket.owner, &raffle.ticket_price)
+            .map_err(|_| Error::TokenTransferFailed)?;
 
         crate::events::TicketRefunded {
             buyer: ticket.owner,
