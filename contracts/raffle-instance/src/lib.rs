@@ -133,7 +133,7 @@ fn write_raffle(env: &Env, raffle: &Raffle) {
 
 fn get_ticket_count(env: &Env) -> u32 {
     env.storage()
-        .instance()
+        .persistent()
         .get(&DataKey::NextTicketId)
         .unwrap_or(0u32)
 }
@@ -148,11 +148,11 @@ fn get_ticket_owner(env: &Env, ticket_id: u32) -> Option<Address> {
 fn next_ticket_id(env: &Env) -> u32 {
     let current: u32 = env
         .storage()
-        .instance()
+        .persistent()
         .get(&DataKey::NextTicketId)
         .unwrap_or(0u32);
     let next = current + 1;
-    env.storage().instance().set(&DataKey::NextTicketId, &next);
+    env.storage().persistent().set(&DataKey::NextTicketId, &next);
     next
 }
 
