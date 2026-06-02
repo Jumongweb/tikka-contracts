@@ -1048,3 +1048,6 @@ fn do_finalize_with_seed(
 
     Ok(())
 }
+
+#[cfg(test)]
+mod test;
