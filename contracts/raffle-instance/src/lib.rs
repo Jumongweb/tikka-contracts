@@ -33,6 +33,7 @@ pub const MIN_TICKET_PRICE: i128 = 10_000;
 #[contract]
 pub struct Contract;
 
+#[soroban_sdk::contracttype]
 #[derive(Clone)]
 pub struct Raffle {
     pub creator: Address,
@@ -60,6 +61,7 @@ pub struct Raffle {
     pub winner_ticket_id: Option<u32>,
 }
 
+#[soroban_sdk::contracttype]
 #[derive(Clone)]
 pub struct FairnessMetadata {
     pub seed: u64,
@@ -84,6 +86,7 @@ pub enum DataKey {
     RandomnessRequestLedger,
     FinishTime,
     TotalTickets,
+    AccumulatedFees,
 }
 
 #[contracterror]
@@ -409,6 +412,8 @@ impl Contract {
             if let Some(treasury) = &raffle.treasury_address {
                 token_client.transfer(&env.current_contract_address(), treasury, &protocol_fee);
             }
+            let prev_fees: i128 = env.storage().instance().get(&DataKey::AccumulatedFees).unwrap_or(0);
+            env.storage().instance().set(&DataKey::AccumulatedFees, &(prev_fees + protocol_fee));
         }
 
         TicketPurchased {
@@ -555,7 +560,7 @@ impl Contract {
             return Err(Error::InvalidStatus);
         }
 
-        if tier_index as usize >= raffle.winners.len() {
+        if tier_index >= raffle.winners.len() {
             return Err(Error::InvalidParameters);
         }
 
@@ -594,6 +599,8 @@ impl Contract {
             if let Some(treasury) = &raffle.treasury_address {
                 token_client.transfer(&env.current_contract_address(), treasury, &fee);
             }
+            let prev_fees: i128 = env.storage().instance().get(&DataKey::AccumulatedFees).unwrap_or(0);
+            env.storage().instance().set(&DataKey::AccumulatedFees, &(prev_fees + fee));
         }
 
         PrizeClaimed {
